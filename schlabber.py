@@ -103,8 +103,27 @@ class Soup:
         pass
     def process_regular(self, post):
         pass
-    def process_unkown(self, post):
-        pass
+    def process_unkown(self, post, post_type):
+        print("\t\tUnsuported tpye:")
+        print("\t\t\tType: " + post_type)
+        meta = {}
+        meta['type'] = post_type
+        meta['time'] = self.get_timstemp(post)
+        content = post.prettify()
+        qhash = hashlib.sha256(content.encode())
+        hashsum = str(qhash.hexdigest().upper())
+        meta['content'] = content
+        filename = "unknown_" + hashsum + ".txt"
+        basepath = self.bup_dir + self.sep
+        if 'time' in meta:
+            basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
+        path = basepath + filename
+        if os.path.isfile(path) == True:
+            print("\t\t\tSkip: " + filename + ": File exists")
+        else:
+            print("\t\t\t-> " + path)
+            with open(path, "w") as uf:
+                json.dump(meta, uf)
 
     def process_posts(self, cur_page):
         posts = cur_page.find_all('div', {"class": "post"})
@@ -127,7 +146,7 @@ class Soup:
             elif post_type == "post_regular":
                 self.process_regular(post)
             else:
-                print("Unsuported tpye: " + post_type)
+                self.process_unkown(post, post_type)
         
     def backup(self, cont_url = ""):
         dlurl = self.rooturl + cont_url
