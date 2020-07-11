@@ -34,8 +34,9 @@ class Soup:
     def process_image(self, post):
         print("\t\tImage:")
         meta = {}
-        for meta in post.find_all("span", {"class": "time"}):
-            meta['time'] = meta.find("abbr").get("title").split(" ")
+        for time_meta in post.find_all("div", {"class": "meta"}):
+            foo = time_meta.find_all("abbr")
+            pprint.pprint(foo)
         if 'time' in meta:
             print("\t\t\t" + str(meta['time']))
 
@@ -48,7 +49,11 @@ class Soup:
         if 'text' in meta:
             print("\t\t\tText: " + meta['text'])
         for link in post.find_all('div', {"class":"imagecontainer"}):
-            meta['soup_url'] = link.find("img").get('src')
+            lightbox = link.find("a", {"class": "lightbox"})
+            if lightbox:
+                meta['soup_url'] = lightbox.get('href')
+            else:
+                meta['soup_url'] = link.find("img").get('src')
         if 'soup_url' in meta:
             print("\t\t\tsoup_ulr: " + meta['soup_url'])
             print("\t\t\tname: " + self.get_asset_name(meta['soup_url']))
