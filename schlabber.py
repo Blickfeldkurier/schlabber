@@ -127,7 +127,11 @@ class Soup:
         meta = {}
         meta['time'] = self.get_timstemp(post)
         meta['embeded'] = post.find("div", {'class':'embed'}).prettify()
-        meta['body'] = post.find("div", {'class':'body'}).get_text().strip()
+        bodyelem = post.find("div", {'class':'body'})
+        if bodyelem:
+            meta['body'] = bodyelem.get_text().strip()
+        else:
+            meta['body'] = "";
         data = meta['embeded'] + meta['body']
         qhash = hashlib.sha256(data.encode())
         hashsum = str(qhash.hexdigest().upper())
@@ -216,6 +220,38 @@ class Soup:
                 meta['soup_url'] = lightbox.get('href')
             else:
                 meta['soup_url'] = link.find("img").get('src')
+        h3elem = post.find("a", {"class":"url"})
+        meta['url'] = h3elem.get("href")
+        meta['title'] = h3elem.get_text()
+        meta['dtstart'] = post.find("abbr", {'class':'dtstart'}).get("title")
+        dtelem = post.find("abbr", {'class':'dtend'})
+        if dtelem:
+            meta['dtend'] = dtelem.get("title")
+        meta['location'] = post.find("span", {'class':'location'}).get_text().strip()
+        meta['ical_url'] = post.find("div", {'class': 'info'}).find('a').get('href')
+        descelem = post.find("div", {'class','description'})
+        if descelem:
+            meta['description'] = descelem.get_text().strip()
+        if 'soup_url' in meta:
+            basepath = self.bup_dir + self.sep
+            if 'time' in meta:
+                basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
+            filename = "event_" + self.get_asset_name(meta['soup_url'])
+            path = basepath + filename + "." + meta['soup_url'].split(".")[-1]
+            if os.path.isfile(path) == True:
+                print("\t\t\tSkip " + meta['soup_url'] + ": File exists")
+            else:
+                print("\t\t\tsoup_ulr: " + meta['soup_url'] + " -> " + path)
+                self.assertdir(basepath)
+                r = requests.get(meta['soup_url'], allow_redirects=True)
+                with open(path, "wb") as tf:
+                    tf.write(r.content)
+                i = requests.get(meta['ical_url'], allow_redirects=True)
+                with open(basepath + filename + ".ical", "w") as icf:
+                    icf.write(i.content)
+                self.assertdir(basepath + "meta" + self.sep )
+                with open(basepath + "meta" + self.sep + filename + ".json", 'w') as outfile:
+                    json.dump(meta, outfile)
 
     def process_regular(self, post):
         print("\t\tRegular:")
@@ -298,7 +334,6 @@ class Soup:
             dlurl = self.rooturl + self.find_next_page(page)
             print("Process Posts")
             self.process_posts(page)
-            break; # debug stop REMOVE!
             if self.dlnextfound == False:
                 break
 
@@ -312,6 +347,5 @@ if __name__ == '__main__':
     parser.add_argument('soups', nargs=1, type=str, default=None, help="Name your soup")
     parser.add_argument('-d','--dir', default=os.getcwd(), help="Directory for Backup (default: Working dir)")
     parser.add_argument('-c', '--continue_from', default="", help='Continue from given suburl (Example: /since/696270106?mode=own)')
-    #parser.add_argument('-f','--foo', action='store_true', default=False, help='sample for option (used later)')
     args = parser.parse_args()
     main(args.soups, args.dir, args.continue_from)
