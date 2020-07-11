@@ -123,15 +123,48 @@ class Soup:
                 json.dump(meta, jf)
 
     def process_video(self, post):
-        pass
+        print("\t\tVideo:")
+        meta = {}
+        meta['time'] = self.get_timstemp(post)
+        meta['embeded'] = post.find("div", {'class':'embed'}).prettify()
+        meta['body'] = post.find("div", {'class':'body'}).get_text().strip()
+        data = meta['embeded'] + meta['body']
+        qhash = hashlib.sha256(data.encode())
+        hashsum = str(qhash.hexdigest().upper())
+        filename = "video_" + hashsum + ".json"
+        basepath = self.bup_dir + self.sep
+        if 'time' in meta:
+            basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
+        path = basepath + filename
+        if os.path.isfile(path) == True:
+            print("\t\t\tSkip: " + filename + ": File exists")
+        else:
+            self.assertdir(basepath)
+            print("\t\t\t-> " + path)
+            with open(path, "w") as vf:
+                json.dump(meta, vf)
+        
+
     def process_file(self, post):
-        pass
+        print("\t\tFile:")
+        meta = {}
+        meta['time'] = self.get_timstemp(post)
+
     def process_review(self, post):
-        pass
+        print("\t\tReview:")
+        meta = {}
+        meta['time'] = self.get_timstemp(post)
+
     def process_event(self, post):
-        pass
+        print("\t\tEvent:")
+        meta = {}
+        meta['time'] = self.get_timstemp(post)
+
     def process_regular(self, post):
-        pass
+        print("\t\tRegular:")
+        meta = {}
+        meta['time'] = self.get_timstemp(post)
+
     def process_unkown(self, post, post_type):
         print("\t\tUnsuported tpye:")
         print("\t\t\tType: " + post_type)
