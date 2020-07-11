@@ -175,11 +175,47 @@ class Soup:
         print("\t\tReview:")
         meta = {}
         meta['time'] = self.get_timstemp(post)
+        for link in post.find_all('div', {"class":"imagecontainer"}):
+            lightbox = link.find("a", {"class": "lightbox"})
+            if lightbox:
+                meta['soup_url'] = lightbox.get('href')
+            else:
+                meta['soup_url'] = link.find("img").get('src')
+        descelem = post.find("div", {'class','description'})
+        if descelem:
+            meta['description'] = descelem.get_text().strip()
+        meta['rating'] = post.find("abbr", {"class", "rating"}).get("title")
+        h3elem = post.find("a", {"class":"url"})
+        meta['url'] = h3elem.get("href")
+        meta['title'] = h3elem.get_text()
+        if 'soup_url' in meta:
+            basepath = self.bup_dir + self.sep
+            if 'time' in meta:
+                basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
+            filename = "review_" + self.get_asset_name(meta['soup_url'])
+            path = basepath + filename + "." + meta['soup_url'].split(".")[-1]
+            if os.path.isfile(path) == True:
+                print("\t\t\tSkip " + meta['soup_url'] + ": File exists")
+            else:
+                print("\t\t\tsoup_ulr: " + meta['soup_url'] + " -> " + path)
+                self.assertdir(basepath)
+                r = requests.get(meta['soup_url'], allow_redirects=True)
+                with open(path, "wb") as tf:
+                    tf.write(r.content)
+                self.assertdir(basepath + "meta" + self.sep )
+                with open(basepath + "review_" + filename + ".json", 'w') as outfile:
+                    json.dump(meta, outfile)
 
     def process_event(self, post):
         print("\t\tEvent:")
         meta = {}
         meta['time'] = self.get_timstemp(post)
+        for link in post.find_all('div', {"class":"imagecontainer"}):
+            lightbox = link.find("a", {"class": "lightbox"})
+            if lightbox:
+                meta['soup_url'] = lightbox.get('href')
+            else:
+                meta['soup_url'] = link.find("img").get('src')
 
     def process_regular(self, post):
         print("\t\tRegular:")
