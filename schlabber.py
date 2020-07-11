@@ -4,6 +4,7 @@ import argparse
 import requests
 import json
 import pprint
+import hashlib
 from bs4 import BeautifulSoup
 
 class Soup:
@@ -16,7 +17,7 @@ class Soup:
         self.bup_dir = os.path.abspath(bup_dir)
         self.assertdir(self.bup_dir)
         self.dlnextfound = False
-        self.post_count = 0
+        self.sep = os.path.sep
         print("Backup: " + self.rooturl)
         print("into: " + self.bup_dir)
     
@@ -32,12 +33,15 @@ class Soup:
     def get_asset_name(self, name):
         return name.split('/')[-1].split('.')[0]
     
+    def get_timstemp(self, post):
+        for time_meta in post.find_all("abbr"):
+            return time_meta.get('title').strip().split(" ")
+        return None
+    
     def process_image(self, post):
-        self.post_count = self.post_count + 1
         print("\t\tImage:")
         meta = {}
-        for time_meta in post.find_all("abbr"):
-            meta['time'] = time_meta.get('title').strip().split(" ")
+        meta['time'] = self.get_timstemp(post)
         for caption in post.find_all("div", {'class': 'caption'}):
             meta['source'] = caption.find('a').get("href")
         for desc in post.find_all("div", {'class': 'description'}):
@@ -49,26 +53,44 @@ class Soup:
             else:
                 meta['soup_url'] = link.find("img").get('src')
         if 'soup_url' in meta:
-            sep = os.path.sep
-            basepath = self.bup_dir + sep
+            basepath = self.bup_dir + self.sep
             if 'time' in meta:
-                basepath = basepath + meta['time'][2] + sep + meta['time'][0] + sep
-            filename = str(self.post_count) + "-" + self.get_asset_name(meta['soup_url'])
+                basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
+            filename = self.get_asset_name(meta['soup_url'])
             path = basepath + filename + "." + meta['soup_url'].split(".")[-1]
-            print("\t\t\tsoup_ulr: " + meta['soup_url'] + " -> " + path)
-            if os.path.isfile(path):
-                print("Skip " + meta['soup_url'] + ": File exists")
+            if os.path.isfile(path) == True:
+                print("\t\t\tSkip " + meta['soup_url'] + ": File exists")
             else:
+                print("\t\t\tsoup_ulr: " + meta['soup_url'] + " -> " + path)
                 self.assertdir(basepath)
                 r = requests.get(meta['soup_url'], allow_redirects=True)
                 with open(path, "wb") as tf:
                     tf.write(r.content)
-                self.assertdir(basepath + "meta" + sep )
-                with open(basepath + "meta" + sep + filename + ".json", 'w') as outfile:
+                self.assertdir(basepath + "meta" + self.sep )
+                with open(basepath + "meta" + self.sep + filename + ".json", 'w') as outfile:
                     json.dump(meta, outfile)
 
     def process_quote(self, post):
-        pass
+        print("\t\tQuote:")
+        meta = {}
+        meta['time'] = self.get_timstemp(post)
+        body = post.find("span", {"class", 'body'}).get_text()
+        author = post.find("cite").get_text()
+        quote = '"' + body + '"' + "\n\t" + author + "\n"
+        qhash = hashlib.sha256(quote.encode())
+        hashsum = str(qhash.hexdigest().upper())
+        filename = "quote_" + hashsum + ".txt"
+        basepath = self.bup_dir + self.sep
+        if 'time' in meta:
+            basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
+        path = basepath + filename
+        if os.path.isfile(path) == True:
+            print("\t\t\tSkip: " + filename + ": File exists")
+        else:
+            print("\t\t\t-> " + path)
+            with open(path, "w") as qf:
+                qf.write(quote)
+
     def process_link(self, post):
         pass
     def process_video(self, post):
