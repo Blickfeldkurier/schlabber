@@ -149,6 +149,27 @@ class Soup:
         print("\t\tFile:")
         meta = {}
         meta['time'] = self.get_timstemp(post)
+        linkelem = post.find("h3")
+        meta["link_title"] = linkelem.get_text().strip()
+        meta["soup_url"] = linkelem.find('a').get('href')
+        meta["text"] = post.find('div', {'class','body'}).get_text().strip()
+        filename = meta["soup_url"].split("/")[-1]
+        basepath = self.bup_dir + self.sep
+        if 'time' in meta:
+            basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
+        path = basepath + filename
+        if os.path.isfile(path) == True:
+            print("\t\t\tSkip: " + filename + ": File exists")
+        else:
+            print("\t\t\tsoup_ulr: " + meta['soup_url'] + " -> " + path)
+            self.assertdir(basepath)
+            r = requests.get(meta['soup_url'], allow_redirects=True)
+            with open(path, "wb") as df:
+                df.write(r.content)
+            self.assertdir(basepath + "meta" + self.sep )
+            jsonname = filename.split(".")[0]
+            with open(basepath + "meta" + self.sep + jsonname + ".json", 'w') as outfile:
+                json.dump(meta, outfile)
 
     def process_review(self, post):
         print("\t\tReview:")
