@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import stat
 import argparse
 import requests
 import json
@@ -87,12 +88,40 @@ class Soup:
         if os.path.isfile(path) == True:
             print("\t\t\tSkip: " + filename + ": File exists")
         else:
+            self.assertdir(basepath)
             print("\t\t\t-> " + path)
             with open(path, "w") as qf:
                 qf.write(quote)
 
     def process_link(self, post):
-        pass
+        print("\t\tLink:")
+        meta = {}
+        meta['time'] = self.get_timstemp(post)
+        linkelem = post.find("h3")
+        meta["link_title"] = linkelem.get_text().strip()
+        meta["url"] = linkelem.find('a').get('href')
+        meta["text"] = post.find('span', {'class','body'}).get_text().strip()
+        qhash = hashlib.sha256(meta["url"].encode())
+        hashsum = str(qhash.hexdigest().upper())
+        filename = "dl-link_" + hashsum + ".sh"
+        basepath = self.bup_dir + self.sep
+        if 'time' in meta:
+            basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
+        path = basepath + filename
+        if os.path.isfile(path) == True:
+            print("\t\t\tSkip: " + filename + ": File exists")
+        else:
+            self.assertdir(basepath)
+            print("\t\t\t-> " + path)
+            filecontent="#! /bin/bash\nwget -c " + meta['url'] + "\n"
+            with open(path, "w") as df:
+                df.write(filecontent)
+            st = os.stat(path)
+            os.chmod(path, st.st_mode | stat.S_IEXEC)
+            self.assertdir(basepath + "meta" + self.sep )
+            with open(basepath + "meta" + self.sep + "dl-link_" + hashsum + ".meta", "w") as jf:
+                json.dump(meta, jf)
+
     def process_video(self, post):
         pass
     def process_file(self, post):
@@ -122,6 +151,7 @@ class Soup:
             print("\t\t\tSkip: " + filename + ": File exists")
         else:
             print("\t\t\t-> " + path)
+            self.assertdir(basepath)
             with open(path, "w") as uf:
                 json.dump(meta, uf)
 
