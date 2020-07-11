@@ -185,6 +185,26 @@ class Soup:
         print("\t\tRegular:")
         meta = {}
         meta['time'] = self.get_timstemp(post)
+        h3elem = post.find("h3")
+        title = ""
+        if h3elem:
+            title = h3elem.get_text().strip()
+        body = post.find("div", {'class':'body'}).get_text().strip()
+        content = title + "\n" + body + "\n"
+        qhash = hashlib.sha256(content.encode())
+        hashsum = str(qhash.hexdigest().upper())
+        filename = "regular_" + hashsum + ".txt"
+        basepath = self.bup_dir + self.sep
+        if 'time' in meta:
+            basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
+        path = basepath + filename
+        if os.path.isfile(path) == True:
+            print("\t\t\tSkip: " + filename + ": File exists")
+        else:
+            self.assertdir(basepath)
+            print("\t\t\t-> " + path)
+            with open(path, "w") as rf:
+                rf.write(content)
 
     def process_unkown(self, post, post_type):
         print("\t\tUnsuported tpye:")
