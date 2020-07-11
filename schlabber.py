@@ -62,7 +62,7 @@ class Soup:
             if os.path.isfile(path) == True:
                 print("\t\t\tSkip " + meta['soup_url'] + ": File exists")
             else:
-                print("\t\t\tsoup_ulr: " + meta['soup_url'] + " -> " + path)
+                print("\t\t\tsoup_url: " + meta['soup_url'] + " -> " + path)
                 self.assertdir(basepath)
                 r = requests.get(meta['soup_url'], allow_redirects=True)
                 with open(path, "wb") as tf:
