@@ -247,7 +247,7 @@ class Soup:
                 with open(path, "wb") as tf:
                     tf.write(r.content)
                 i = requests.get(meta['ical_url'], allow_redirects=True)
-                with open(basepath + filename + ".ical", "w") as icf:
+                with open(basepath + filename + ".ical", "wb") as icf:
                     icf.write(i.content)
                 self.assertdir(basepath + "meta" + self.sep )
                 with open(basepath + "meta" + self.sep + filename + ".json", 'w') as outfile:
