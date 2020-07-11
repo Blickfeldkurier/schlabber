@@ -16,6 +16,7 @@ class Soup:
         self.bup_dir = os.path.abspath(bup_dir)
         self.assertdir(self.bup_dir)
         self.dlnextfound = False
+        self.post_count = 0
         print("Backup: " + self.rooturl)
         print("into: " + self.bup_dir)
     
@@ -32,22 +33,15 @@ class Soup:
         return name.split('/')[-1].split('.')[0]
     
     def process_image(self, post):
+        self.post_count = self.post_count + 1
         print("\t\tImage:")
         meta = {}
-        for time_meta in post.find_all("div", {"class": "meta"}):
-            foo = time_meta.find_all("abbr")
-            pprint.pprint(foo)
-        if 'time' in meta:
-            print("\t\t\t" + str(meta['time']))
-
+        for time_meta in post.find_all("abbr"):
+            meta['time'] = time_meta.get('title').strip().split(" ")
         for caption in post.find_all("div", {'class': 'caption'}):
             meta['source'] = caption.find('a').get("href")
-        if 'source' in meta:
-            print("\t\t\tSource: " + meta['source'])
         for desc in post.find_all("div", {'class': 'description'}):
             meta['text'] = desc.get_text()
-        if 'text' in meta:
-            print("\t\t\tText: " + meta['text'])
         for link in post.find_all('div', {"class":"imagecontainer"}):
             lightbox = link.find("a", {"class": "lightbox"})
             if lightbox:
@@ -55,8 +49,23 @@ class Soup:
             else:
                 meta['soup_url'] = link.find("img").get('src')
         if 'soup_url' in meta:
-            print("\t\t\tsoup_ulr: " + meta['soup_url'])
-            print("\t\t\tname: " + self.get_asset_name(meta['soup_url']))
+            sep = os.path.sep
+            basepath = self.bup_dir + sep
+            if 'time' in meta:
+                basepath = basepath + meta['time'][2] + sep + meta['time'][0] + sep
+            filename = str(self.post_count) + "-" + self.get_asset_name(meta['soup_url'])
+            path = basepath + filename + "." + meta['soup_url'].split(".")[-1]
+            print("\t\t\tsoup_ulr: " + meta['soup_url'] + " -> " + path)
+            if os.path.isfile(path):
+                print("Skip " + meta['soup_url'] + ": File exists")
+            else:
+                self.assertdir(basepath)
+                r = requests.get(meta['soup_url'], allow_redirects=True)
+                with open(path, "wb") as tf:
+                    tf.write(r.content)
+                self.assertdir(basepath + "meta" + sep )
+                with open(basepath + "meta" + sep + filename + ".json", 'w') as outfile:
+                    json.dump(meta, outfile)
 
     def process_quote(self, post):
         pass
