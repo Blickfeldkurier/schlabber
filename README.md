@@ -6,6 +6,7 @@ Schlabbern is like auslöffeln, only much more messy
  * Works with endless scroll
  * Saves more than images
  * Preserves some metadata
+ * If your soup shows timestamps, they will be used to sort the backup
 
 ## Dependencies
  * beautifulsoup4￼ (bs4)
