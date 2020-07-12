@@ -28,9 +28,14 @@ class Soup:
     def find_next_page(self, cur_page):
         for script in cur_page.find_all('script'):
             if script.string and "SOUP.Endless.next_url" in script.string:
-                print("\t...found")
+                print("\t...found script")
                 self.dlnextfound = True
                 return script.string.split('\'')[-2].strip()
+        for more in cur_page.find_all('a', class_='more'):
+            if more['href'] and "since" in more['href']:
+                print("\t...found pagination")
+                self.dlnextfound=True
+                return more['href'].strip()
         self.dlnextfound = False
         return ""
     
