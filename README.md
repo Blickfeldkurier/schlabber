@@ -9,7 +9,7 @@ Schlabbern is like auslöffeln, only much more messy
  * If your soup shows timestamps, they will be used to sort the backup
 
 ## Dependencies
- * beautifulsoup4￼ (bs4)
+ * [beautifulsoup4 (bs4)](https://www.crummy.com/software/BeautifulSoup/)
  * requests
 
 ## Use
