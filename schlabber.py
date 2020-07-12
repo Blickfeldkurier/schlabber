@@ -130,7 +130,9 @@ class Soup:
         meta = {}
         meta['time'] = self.get_timstemp(post)
         meta['embeded'] = post.find("div", {'class':'embed'}).prettify()
-        meta['soup_url'] = post.find("div", {'class':'embed'}).find('video').get("src")
+        video = post.find("div", {'class':'embed'}).find('video')
+        if video:
+            meta['soup_url'] = video.get("src")
         bodyelem = post.find("div", {'class':'body'})
         if bodyelem:
             meta['body'] = bodyelem.get_text().strip()
