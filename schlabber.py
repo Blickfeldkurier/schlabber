@@ -155,6 +155,22 @@ class Soup:
                 self.assertdir(basepath + "meta" + self.sep )
                 with open(basepath + "meta" + self.sep + filename + ".json", 'w') as outfile:
                     json.dump(meta, outfile)
+        else:
+            data = meta['embeded'] + meta['body']
+            qhash = hashlib.sha256(data.encode())
+            hashsum = str(qhash.hexdigest().upper())
+            filename = "video_" + hashsum + ".json"
+            basepath = self.bup_dir + self.sep
+            if self.has_valid_timestamp(meta):
+                basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
+            path = basepath + filename
+            if os.path.isfile(path) == True:
+                print("\t\t\tSkip: " + filename + ": File exists")
+            else:
+                self.assertdir(basepath)
+                print("\t\t\t-> " + path)
+                with open(path, "w") as vf:
+                    json.dump(meta, vf)
 
     def process_file(self, post):
         print("\t\tFile:")
