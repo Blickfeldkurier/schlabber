@@ -13,6 +13,9 @@ class Soup:
         if not os.path.isdir(dirname):
             os.makedirs(dirname)
 
+    def has_valid_timestamp(self, meta):
+        return meta and 'time' in meta and meta['time']
+
     def __init__(self, soup, bup_dir):
         self.rooturl = "http://"+soup+".soup.io"
         self.bup_dir = os.path.abspath(bup_dir)
@@ -55,7 +58,7 @@ class Soup:
                 meta['soup_url'] = link.find("img").get('src')
         if 'soup_url' in meta:
             basepath = self.bup_dir + self.sep
-            if 'time' in meta:
+            if self.has_valid_timestamp(meta):
                 basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
             filename = self.get_asset_name(meta['soup_url'])
             path = basepath + filename + "." + meta['soup_url'].split(".")[-1]
@@ -82,7 +85,7 @@ class Soup:
         hashsum = str(qhash.hexdigest().upper())
         filename = "quote_" + hashsum + ".txt"
         basepath = self.bup_dir + self.sep
-        if 'time' in meta:
+        if self.has_valid_timestamp(meta):
             basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
         path = basepath + filename
         if os.path.isfile(path) == True:
@@ -105,7 +108,7 @@ class Soup:
         hashsum = str(qhash.hexdigest().upper())
         filename = "dl-link_" + hashsum + ".sh"
         basepath = self.bup_dir + self.sep
-        if 'time' in meta:
+        if self.has_valid_timestamp(meta):
             basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
         path = basepath + filename
         if os.path.isfile(path) == True:
@@ -137,7 +140,7 @@ class Soup:
         hashsum = str(qhash.hexdigest().upper())
         filename = "video_" + hashsum + ".json"
         basepath = self.bup_dir + self.sep
-        if 'time' in meta:
+        if self.has_valid_timestamp(meta):
             basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
         path = basepath + filename
         if os.path.isfile(path) == True:
@@ -163,7 +166,7 @@ class Soup:
         else:
             filename = "file_unkown"
         basepath = self.bup_dir + self.sep
-        if 'time' in meta:
+        if self.has_valid_timestamp(meta):
             basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
         path = basepath + filename
         if os.path.isfile(path) == True:
@@ -199,7 +202,7 @@ class Soup:
         meta['title'] = h3elem.get_text()
         if 'soup_url' in meta:
             basepath = self.bup_dir + self.sep
-            if 'time' in meta:
+            if self.has_valid_timestamp(meta):
                 basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
             filename = "review_" + self.get_asset_name(meta['soup_url'])
             path = basepath + filename + "." + meta['soup_url'].split(".")[-1]
@@ -239,7 +242,7 @@ class Soup:
             meta['description'] = descelem.get_text().strip()
         if 'soup_url' in meta:
             basepath = self.bup_dir + self.sep
-            if 'time' in meta:
+            if self.has_valid_timestamp(meta):
                 basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
             filename = "event_" + self.get_asset_name(meta['soup_url'])
             path = basepath + filename + "." + meta['soup_url'].split(".")[-1]
@@ -272,8 +275,9 @@ class Soup:
         hashsum = str(qhash.hexdigest().upper())
         filename = "regular_" + hashsum + ".txt"
         basepath = self.bup_dir + self.sep
-        if 'time' in meta:
+        if self.has_valid_timestamp(meta):
             basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
+
         path = basepath + filename
         if os.path.isfile(path) == True:
             print("\t\t\tSkip: " + filename + ": File exists")
@@ -295,7 +299,7 @@ class Soup:
         meta['content'] = content
         filename = "unknown_" + hashsum + ".txt"
         basepath = self.bup_dir + self.sep
-        if 'time' in meta:
+        if self.has_valid_timestamp(meta):
             basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
         path = basepath + filename
         if os.path.isfile(path) == True:
