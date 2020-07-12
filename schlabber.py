@@ -135,27 +135,47 @@ class Soup:
         meta = {}
         meta['time'] = self.get_timstemp(post)
         meta['embeded'] = post.find("div", {'class':'embed'}).prettify()
+        video = post.find("div", {'class':'embed'}).find('video')
+        if video:
+            meta['soup_url'] = video.get("src")
         bodyelem = post.find("div", {'class':'body'})
         if bodyelem:
             meta['body'] = bodyelem.get_text().strip()
         else:
             meta['body'] = "";
-        data = meta['embeded'] + meta['body']
-        qhash = hashlib.sha256(data.encode())
-        hashsum = str(qhash.hexdigest().upper())
-        filename = "video_" + hashsum + ".json"
-        basepath = self.bup_dir + self.sep
-        if self.has_valid_timestamp(meta):
-            basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
-        path = basepath + filename
-        if os.path.isfile(path) == True:
-            print("\t\t\tSkip: " + filename + ": File exists")
+        if 'soup_url' in meta:
+            basepath = self.bup_dir + self.sep
+            if self.has_valid_timestamp(meta):
+                basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
+            filename = self.get_asset_name(meta['soup_url'])
+            path = basepath + filename + "." + meta['soup_url'].split(".")[-1]
+            if os.path.isfile(path) == True:
+                print("\t\t\tSkip " + meta['soup_url'] + ": File exists")
+            else:
+                print("\t\t\tsoup_url: " + meta['soup_url'] + " -> " + path)
+                self.assertdir(basepath)
+                r = requests.get(meta['soup_url'], allow_redirects=True)
+                with open(path, "wb") as tf:
+                    tf.write(r.content)
+                self.assertdir(basepath + "meta" + self.sep )
+                with open(basepath + "meta" + self.sep + filename + ".json", 'w') as outfile:
+                    json.dump(meta, outfile)
         else:
-            self.assertdir(basepath)
-            print("\t\t\t-> " + path)
-            with open(path, "w") as vf:
-                json.dump(meta, vf)
-        
+            data = meta['embeded'] + meta['body']
+            qhash = hashlib.sha256(data.encode())
+            hashsum = str(qhash.hexdigest().upper())
+            filename = "video_" + hashsum + ".json"
+            basepath = self.bup_dir + self.sep
+            if self.has_valid_timestamp(meta):
+                basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
+            path = basepath + filename
+            if os.path.isfile(path) == True:
+                print("\t\t\tSkip: " + filename + ": File exists")
+            else:
+                self.assertdir(basepath)
+                print("\t\t\t-> " + path)
+                with open(path, "w") as vf:
+                    json.dump(meta, vf)
 
     def process_file(self, post):
         print("\t\tFile:")
