@@ -25,3 +25,16 @@ For more options:
 ```
 ./schlabber -h
 ```
+
+### Contiune Backup
+Sometimes Soup.io failes to fetch more Posts.
+In this case the script will stop.
+Just run the script again, but this time with the -c switch.
+Look at your previous run. There is a line telling you "Get: ..."
+Just use everything from /since/ till the line end as parameter for -c
+and the script should continue where it has left off.
+
+## Alternatives
+If this script does not work for you there are others you can try:
+ * https://github.com/neingeist/soup-backup
+ * https://github.com/rixx/ripsoup
