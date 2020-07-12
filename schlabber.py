@@ -24,10 +24,10 @@ class Soup:
     
     def find_next_page(self, cur_page):
         for script in cur_page.find_all('script'):
-            if "SOUP.Endless.next_url" in script.get_text():
+            if script.string and "SOUP.Endless.next_url" in script.string:
                 print("\t...found")
                 self.dlnextfound = True
-                return script.get_text().split('\'')[-2].strip()
+                return script.string.split('\'')[-2].strip()
         self.dlnextfound = False
         return ""
     
@@ -340,6 +340,7 @@ class Soup:
             print("Process Posts")
             self.process_posts(page)
             if self.dlnextfound == False:
+                print("no next found.")
                 break
 
 def main(soups, bup_dir, cont_from):
