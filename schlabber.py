@@ -370,7 +370,7 @@ class Soup:
             dl = requests.get(dlurl)
             if dl.status_code == 200:
                 page = BeautifulSoup(dl.content, 'html.parser')
-                if dlurl != old_url
+                if dlurl != old_url:
                     print("Process Posts")
                     self.process_posts(page, dlurl)
                 print("Looking for next Page")
