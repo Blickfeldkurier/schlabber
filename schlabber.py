@@ -25,7 +25,7 @@ class Soup:
         print("Backup: " + self.rooturl)
         print("into: " + self.bup_dir)
     
-    def find_next_page(self, cur_page):
+    def find_next_page(self, cur_page, cur_url):
         for script in cur_page.find_all('script'):
             if script.string and "SOUP.Endless.next_url" in script.string:
                 self.dlnextfound = True
@@ -39,7 +39,7 @@ class Soup:
                 print("\t...found pagination: " + url)
                 return url
         self.dlnextfound = False
-        return ""
+        return cur_url
     
     def get_asset_name(self, name):
         return name.split('/')[-1].split('.')[0]
@@ -364,7 +364,6 @@ class Soup:
         maxretrycount = 10
         retrycount = 0
         dlurl = self.rooturl + cont_url
-        old_url = ""
         while retrycount < maxretrycount:
             print("Get: " + dlurl)
             dl = requests.get(dlurl)
@@ -373,22 +372,16 @@ class Soup:
                 print("Process Posts")
                 self.process_posts(page, dlurl)
                 print("Looking for next Page")
-                if dlurl != "":
-                    old_url = dlurl
-                dlurl = self.rooturl + self.find_next_page(page)
+                dlurl = self.rooturl + self.find_next_page(page, dlurl)
             else:
                 self.dlnextfound = False
                 print("Failed with Status Code: " + str(dl.status_code))
             if self.dlnextfound == False:
                 retrycount=retrycount+1
-                if old_url != "":
-                    dlurl = old_url
                 print("no next found. retry {} of {}".format(retrycount, maxretrycount))
             else:
                 retrycount = 0
             
-            
-
 def main(soups, bup_dir, cont_from):
     for site in soups:
         soup = Soup(site, bup_dir)
