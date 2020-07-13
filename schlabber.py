@@ -395,6 +395,6 @@ if __name__ == '__main__':
     parser.add_argument('soups', nargs=1, type=str, default=None, help="Name your soup")
     parser.add_argument('-d','--dir', default=os.getcwd(), help="Directory for Backup (default: Working dir)")
     parser.add_argument('-c', '--continue_from', default="", help='Continue from given suburl (Example: /since/696270106?mode=own)')
-    parser.add_argument('-r', '--retries', default=10, help="Set the maximum number of retries (default: 10)")
+    parser.add_argument('-r', '--retries', type=int, default=10, help="Set the maximum number of retries (default: 10)")
     args = parser.parse_args()
     main(args.soups, args.dir, args.continue_from, args.retries)
