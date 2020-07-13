@@ -40,7 +40,11 @@ class Soup:
         return ""
     
     def get_asset_name(self, name):
-        return name.split('/')[-1].split('.')[0]
+        try:
+            return name.split('/')[-1].split('.')[0]
+        except NoneType:
+            print(name)
+
     
     def get_timstemp(self, post):
         for time_meta in post.find_all("abbr"):
@@ -359,8 +363,10 @@ class Soup:
                 self.process_unkown(post, post_type)
         
     def backup(self, cont_url = ""):
+        maxretrycount = 10
+        retrycount = 0
         dlurl = self.rooturl + cont_url
-        while True:
+        while retrycount < maxretrycount:
             print("Get: " + dlurl)
             dl = requests.get(dlurl)
             page = BeautifulSoup(dl.content, 'html.parser')
@@ -369,8 +375,10 @@ class Soup:
             print("Process Posts")
             self.process_posts(page)
             if self.dlnextfound == False:
-                print("no next found.")
-                break
+                retrycount=retrycount+1
+                print("no next found. retry {} of {}".format(retrycount, maxretrycount))
+            else:
+                retrycount = 0
 
 def main(soups, bup_dir, cont_from):
     for site in soups:
