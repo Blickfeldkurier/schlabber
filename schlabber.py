@@ -41,7 +41,6 @@ class Soup:
     
     def get_asset_name(self, name):
         return name.split('/')[-1].split('.')[0]
-
     
     def get_timstemp(self, post):
         for time_meta in post.find_all("abbr"):
