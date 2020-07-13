@@ -28,14 +28,16 @@ class Soup:
     def find_next_page(self, cur_page):
         for script in cur_page.find_all('script'):
             if script.string and "SOUP.Endless.next_url" in script.string:
-                print("\t...found script")
                 self.dlnextfound = True
-                return script.string.split('\'')[-2].strip()
+                url = script.string.split('\'')[-2].strip()
+                print("\t...found script: " + url)
+                return url
         for more in cur_page.find_all('a', class_='more'):
             if more['href'] and "since" in more['href']:
-                print("\t...found pagination")
                 self.dlnextfound=True
-                return more['href'].strip()
+                url = more['href'].strip()
+                print("\t...found pagination: " + url)
+                return url
         self.dlnextfound = False
         return ""
     
@@ -365,16 +367,21 @@ class Soup:
         while retrycount < maxretrycount:
             print("Get: " + dlurl)
             dl = requests.get(dlurl)
-            page = BeautifulSoup(dl.content, 'html.parser')
-            print("Looking for next Page")
-            dlurl = self.rooturl + self.find_next_page(page)
-            print("Process Posts")
-            self.process_posts(page, dlurl)
+            if dl.status_code == 200:
+                page = BeautifulSoup(dl.content, 'html.parser')
+                print("Process Posts")
+                self.process_posts(page, dlurl)
+                print("Looking for next Page")
+                dlurl = self.rooturl + self.find_next_page(page)
+            else:
+                print("Failed with Status Code: " + str(dl.status_code))
             if self.dlnextfound == False:
                 retrycount=retrycount+1
                 print("no next found. retry {} of {}".format(retrycount, maxretrycount))
             else:
                 retrycount = 0
+            
+            
 
 def main(soups, bup_dir, cont_from):
     for site in soups:
