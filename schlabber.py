@@ -364,19 +364,23 @@ class Soup:
         maxretrycount = 10
         retrycount = 0
         dlurl = self.rooturl + cont_url
+        old_url = ""
         while retrycount < maxretrycount:
             print("Get: " + dlurl)
             dl = requests.get(dlurl)
             if dl.status_code == 200:
                 page = BeautifulSoup(dl.content, 'html.parser')
-                print("Process Posts")
-                self.process_posts(page, dlurl)
+                if dlurl != old_url:
+                    print("Process Posts")
+                    self.process_posts(page, dlurl)
                 print("Looking for next Page")
+                old_url = dlurl
                 dlurl = self.rooturl + self.find_next_page(page)
             else:
                 print("Failed with Status Code: " + str(dl.status_code))
             if self.dlnextfound == False:
                 retrycount=retrycount+1
+                dlurl = old_url
                 print("no next found. retry {} of {}".format(retrycount, maxretrycount))
             else:
                 retrycount = 0
