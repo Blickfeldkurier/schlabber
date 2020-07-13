@@ -47,9 +47,9 @@ class Soup:
             return time_meta.get('title').strip().split(" ")
         return None
     
-    def process_image(self, post):
+    def process_image(self, post, dlurl):
         print("\t\tImage:")
-        meta = {}
+        meta = {'soup_page' : dlurl}
         meta['time'] = self.get_timstemp(post)
         for caption in post.find_all("div", {'class': 'caption'}):
             meta['source'] = caption.find('a').get("href")
@@ -101,9 +101,9 @@ class Soup:
             with open(path, "w") as qf:
                 qf.write(quote)
 
-    def process_link(self, post):
+    def process_link(self, post, dlurl):
         print("\t\tLink:")
-        meta = {}
+        meta = {'soup_page' : dlurl}
         meta['time'] = self.get_timstemp(post)
         linkelem = post.find("h3")
         meta["link_title"] = linkelem.get_text().strip()
@@ -130,9 +130,9 @@ class Soup:
             with open(basepath + "meta" + self.sep + "dl-link_" + hashsum + ".meta", "w") as jf:
                 json.dump(meta, jf)
 
-    def process_video(self, post):
+    def process_video(self, post, dlurl):
         print("\t\tVideo:")
-        meta = {}
+        meta = {'soup_page' : dlurl}
         meta['time'] = self.get_timstemp(post)
         meta['embeded'] = post.find("div", {'class':'embed'}).prettify()
         video = post.find("div", {'class':'embed'}).find('video')
@@ -177,9 +177,9 @@ class Soup:
                 with open(path, "w") as vf:
                     json.dump(meta, vf)
 
-    def process_file(self, post):
+    def process_file(self, post, dlurl):
         print("\t\tFile:")
-        meta = {}
+        meta = {'soup_page' : dlurl}
         meta['time'] = self.get_timstemp(post)
         linkelem = post.find("h3")
         if linkelem:
@@ -208,9 +208,9 @@ class Soup:
             with open(basepath + "meta" + self.sep + jsonname + ".json", 'w') as outfile:
                 json.dump(meta, outfile)
 
-    def process_review(self, post):
+    def process_review(self, post, dlurl):
         print("\t\tReview:")
-        meta = {}
+        meta = {'soup_page' : dlurl}
         meta['time'] = self.get_timstemp(post)
         for link in post.find_all('div', {"class":"imagecontainer"}):
             lightbox = link.find("a", {"class": "lightbox"})
@@ -243,9 +243,9 @@ class Soup:
                 with open(basepath + "review_" + filename + ".json", 'w') as outfile:
                     json.dump(meta, outfile)
 
-    def process_event(self, post):
+    def process_event(self, post, dlurl):
         print("\t\tEvent:")
-        meta = {}
+        meta = {'soup_page' : dlurl}
         meta['time'] = self.get_timstemp(post)
         for link in post.find_all('div', {"class":"imagecontainer"}):
             lightbox = link.find("a", {"class": "lightbox"})
@@ -312,10 +312,10 @@ class Soup:
             with open(path, "w") as rf:
                 rf.write(content)
 
-    def process_unkown(self, post, post_type):
+    def process_unkown(self, post, post_type, dlurl):
         print("\t\tUnsuported tpye:")
         print("\t\t\tType: " + post_type)
-        meta = {}
+        meta = {'soup_page' : dlurl}
         meta['type'] = post_type
         meta['time'] = self.get_timstemp(post)
         content = post.prettify()
@@ -335,28 +335,28 @@ class Soup:
             with open(path, "w") as uf:
                 json.dump(meta, uf)
 
-    def process_posts(self, cur_page):
+    def process_posts(self, cur_page, dlurl):
         posts = cur_page.find_all('div', {"class": "post"})
         for post in posts:
             post_type = post.get('class')[1] 
             if post_type == "post_image":
-                self.process_image(post)
+                self.process_image(post, dlurl)
             elif post_type == "post_quote":
                 self.process_quote(post)
             elif post_type == "post_video":
-                self.process_video(post)
+                self.process_video(post, dlurl)
             elif post_type == "post_link":
-                self.process_link(post)
+                self.process_link(post, dlurl)
             elif post_type == "post_file":
-                self.process_file(post)
+                self.process_file(post, dlurl)
             elif post_type == "post_review":
-                self.process_review(post)
+                self.process_review(post, dlurl)
             elif post_type == "post_event":
-                self.process_event(post)
+                self.process_event(post, dlurl)
             elif post_type == "post_regular":
                 self.process_regular(post)
             else:
-                self.process_unkown(post, post_type)
+                self.process_unkown(post, post_type, dlurl)
         
     def backup(self, cont_url = ""):
         dlurl = self.rooturl + cont_url
@@ -367,7 +367,7 @@ class Soup:
             print("Looking for next Page")
             dlurl = self.rooturl + self.find_next_page(page)
             print("Process Posts")
-            self.process_posts(page)
+            self.process_posts(page, dlurl)
             if self.dlnextfound == False:
                 print("no next found.")
                 break

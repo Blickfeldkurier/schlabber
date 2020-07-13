@@ -34,6 +34,9 @@ Look at your previous run. There is a line telling you "Get: ..."
 Just use everything from /since/ till the line end as parameter for -c
 and the script should continue where it has left off.
 
+The same URL can be found in any *.json file in the meta directory.
+Its key is 'soup_page'.
+
 ## Alternatives
 If this script does not work for you there are others you can try:
  * https://github.com/neingeist/soup-backup
