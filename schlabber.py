@@ -40,10 +40,7 @@ class Soup:
         return ""
     
     def get_asset_name(self, name):
-        try:
-            return name.split('/')[-1].split('.')[0]
-        except NoneType:
-            print(name)
+        return name.split('/')[-1].split('.')[0]
 
     
     def get_timstemp(self, post):
