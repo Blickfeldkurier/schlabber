@@ -360,8 +360,8 @@ class Soup:
             else:
                 self.process_unkown(post, post_type, dlurl)
         
-    def backup(self, cont_url = ""):
-        maxretrycount = 10
+    def backup(self, cont_url = "", max_retries = "10"):
+        maxretrycount = max_retries
         retrycount = 0
         dlurl = self.rooturl + cont_url
         old_url = ""
@@ -385,15 +385,16 @@ class Soup:
             else:
                 retrycount = 0
             
-def main(soups, bup_dir, cont_from):
+def main(soups, bup_dir, cont_from, max_retries):
     for site in soups:
         soup = Soup(site, bup_dir)
-        soup.backup(cont_from)
+        soup.backup(cont_from, max_retries)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Soup.io backup')
     parser.add_argument('soups', nargs=1, type=str, default=None, help="Name your soup")
     parser.add_argument('-d','--dir', default=os.getcwd(), help="Directory for Backup (default: Working dir)")
     parser.add_argument('-c', '--continue_from', default="", help='Continue from given suburl (Example: /since/696270106?mode=own)')
+    parser.add_argument('-r', '--retries', default=10, help="Set the maximum number of retries (default: 10)")
     args = parser.parse_args()
-    main(args.soups, args.dir, args.continue_from)
+    main(args.soups, args.dir, args.continue_from, args.retries)
