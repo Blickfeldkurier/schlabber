@@ -152,6 +152,8 @@ class Soup:
         else:
             meta['body'] = "";
         if 'soup_url' in meta and meta['soup_url'] is not None:
+            if meta['soup_url'].startswith("//"):
+                meta['soup_url'] = "http:" + meta['soup_url']
             basepath = self.bup_dir + self.sep
             if self.has_valid_timestamp(meta):
                 basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
