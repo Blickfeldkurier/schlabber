@@ -145,7 +145,7 @@ class Soup:
             meta['body'] = bodyelem.get_text().strip()
         else:
             meta['body'] = "";
-        if 'soup_url' in meta:
+        if 'soup_url' in meta and meta['soup_url'] is not None:
             basepath = self.bup_dir + self.sep
             if self.has_valid_timestamp(meta):
                 basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
