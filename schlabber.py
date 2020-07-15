@@ -140,12 +140,20 @@ class Soup:
         video = post.find("div", {'class':'embed'}).find('video')
         if video:
             meta['soup_url'] = video.get("src")
+            if meta['soup_url'] is None and video.find('source'):
+                for source in video.find_all('source'):
+                    src = source.get("src")
+                    # prefer mp4 (as for my example webm returned 404)
+                    if meta['soup_url'] is None or (src is not None and src.endswith(".mp4")):
+                        meta['soup_url'] = src
         bodyelem = post.find("div", {'class':'body'})
         if bodyelem:
             meta['body'] = bodyelem.get_text().strip()
         else:
             meta['body'] = "";
-        if 'soup_url' in meta:
+        if 'soup_url' in meta and meta['soup_url'] is not None:
+            if meta['soup_url'].startswith("//"):
+                meta['soup_url'] = "http:" + meta['soup_url']
             basepath = self.bup_dir + self.sep
             if self.has_valid_timestamp(meta):
                 basepath = basepath + meta['time'][2] + self.sep + meta['time'][0] + self.sep
