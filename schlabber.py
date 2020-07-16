@@ -54,8 +54,6 @@ class Soup:
         print("\t\tImage:")
         meta = {'soup_page' : dlurl}
         meta['time'] = self.get_timstemp(post)
-        for caption in post.find_all("div", {'class': 'caption'}):
-            meta['source'] = caption.find('a').get("href")
         for desc in post.find_all("div", {'class': 'description'}):
             meta['text'] = desc.get_text()
         for link in post.find_all('div', {"class":"imagecontainer"}):
@@ -64,6 +62,8 @@ class Soup:
                 meta['soup_url'] = lightbox.get('href')
             else:
                 meta['soup_url'] = link.find("img").get('src')
+            for caption in link.find_all("div", {'class': 'caption'}):
+                meta['source'] = caption.find('a').get("href")
         if 'soup_url' in meta:
             basepath = self.bup_dir + self.sep
             if self.has_valid_timestamp(meta):
