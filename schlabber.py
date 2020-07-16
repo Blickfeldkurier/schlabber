@@ -208,8 +208,8 @@ class Soup:
         if os.path.isfile(path) == True:
             print("\t\t\tSkip: " + filename + ": File exists")
         else:
-            if 'soup_url' in meta:
-                print("\t\t\tsoup_ulr: " + meta['soup_url'] + " -> " + path)
+            if 'soup_url' in meta and meta['soup_url'].startswith('http'):
+                print("\t\t\tsoup_url: " + meta['soup_url'] + " -> " + path)
                 self.assertdir(basepath)
                 r = self.session.get(meta['soup_url'], allow_redirects=True, cookies=self.session.cookies)
                 with open(path, "wb") as df:
