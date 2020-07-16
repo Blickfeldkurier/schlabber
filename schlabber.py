@@ -22,6 +22,7 @@ class Soup:
         self.assertdir(self.bup_dir)
         self.dlnextfound = False
         self.sep = os.path.sep
+        self.session = requests.session()
         print("Backup: " + self.rooturl)
         print("into: " + self.bup_dir)
     
@@ -74,7 +75,7 @@ class Soup:
             else:
                 print("\t\t\tsoup_url: " + meta['soup_url'] + " -> " + path)
                 self.assertdir(basepath)
-                r = requests.get(meta['soup_url'], allow_redirects=True)
+                r = self.session.get(meta['soup_url'], allow_redirects=True, cookies=self.session.cookies)
                 with open(path, "wb") as tf:
                     tf.write(r.content)
                 self.assertdir(basepath + "meta" + self.sep )
@@ -164,7 +165,7 @@ class Soup:
             else:
                 print("\t\t\tsoup_url: " + meta['soup_url'] + " -> " + path)
                 self.assertdir(basepath)
-                r = requests.get(meta['soup_url'], allow_redirects=True)
+                r = self.session.get(meta['soup_url'], allow_redirects=True, cookies=self.session.cookies)
                 with open(path, "wb") as tf:
                     tf.write(r.content)
                 self.assertdir(basepath + "meta" + self.sep )
@@ -210,7 +211,7 @@ class Soup:
             if 'soup_url' in meta:
                 print("\t\t\tsoup_ulr: " + meta['soup_url'] + " -> " + path)
                 self.assertdir(basepath)
-                r = requests.get(meta['soup_url'], allow_redirects=True)
+                r = self.session.get(meta['soup_url'], allow_redirects=True, cookies=self.session.cookies)
                 with open(path, "wb") as df:
                     df.write(r.content)
             self.assertdir(basepath + "meta" + self.sep )
@@ -246,7 +247,7 @@ class Soup:
             else:
                 print("\t\t\tsoup_ulr: " + meta['soup_url'] + " -> " + path)
                 self.assertdir(basepath)
-                r = requests.get(meta['soup_url'], allow_redirects=True)
+                r = self.session.get(meta['soup_url'], allow_redirects=True, cookies=self.session.cookies)
                 with open(path, "wb") as tf:
                     tf.write(r.content)
                 self.assertdir(basepath + "meta" + self.sep )
@@ -286,10 +287,10 @@ class Soup:
             else:
                 print("\t\t\tsoup_ulr: " + meta['soup_url'] + " -> " + path)
                 self.assertdir(basepath)
-                r = requests.get(meta['soup_url'], allow_redirects=True)
+                r = self.session.get(meta['soup_url'], allow_redirects=True, cookies=self.session.cookies)
                 with open(path, "wb") as tf:
                     tf.write(r.content)
-                i = requests.get(meta['ical_url'], allow_redirects=True)
+                i = self.session.get(meta['ical_url'], allow_redirects=True, cookies=self.session.cookies)
                 with open(basepath + filename + ".ical", "wb") as icf:
                     icf.write(i.content)
                 self.assertdir(basepath + "meta" + self.sep )
@@ -367,7 +368,21 @@ class Soup:
                 self.process_regular(post)
             else:
                 self.process_unkown(post, post_type, dlurl)
-        
+    
+    def ack_if_nsfw(self, nsfw_page, dlurl):
+        form = nsfw_page.find("form")
+        cw_site = '/override_content_warning'
+        if form:
+            if form.get("action") == cw_site:
+                print("Soup is NSFW")
+                payload = {}
+                inputs = form.find_all("input")
+                for inputval in inputs:
+                    payload[inputval.get("name").strip()] = inputval.get("value").strip()
+                print("Send Payload:\n" + str(payload))
+                dl = self.session.post(self.rooturl + cw_site, data=payload)
+        return nsfw_page
+
     def backup(self, cont_url = "", max_retries = "10"):
         maxretrycount = max_retries
         retrycount = 0
@@ -375,15 +390,20 @@ class Soup:
         old_url = ""
         while retrycount < maxretrycount:
             print("Get: " + dlurl)
-            dl = requests.get(dlurl)
+            dl = self.session.get(dlurl, allow_redirects=True, cookies=self.session.cookies)
+            pprint.pprint(self.session.cookies.get_dict())
             if dl.status_code == 200:
-                page = BeautifulSoup(dl.content, 'html.parser')
+                page = self.ack_if_nsfw(BeautifulSoup(dl.content, 'html.parser'), dlurl)
                 if dlurl != old_url:
                     print("Process Posts")
                     self.process_posts(page, dlurl)
                 print("Looking for next Page")
                 old_url = dlurl
-                dlurl = self.rooturl + self.find_next_page(page, dlurl)
+                extension = self.find_next_page(page, dlurl)
+                if extension.startswith("http"):
+                    dlurl = extension
+                else:
+                    dlurl = self.rooturl + extension
             else:
                 self.dlnextfound = False
                 print("Failed with Status Code: " + str(dl.status_code))
